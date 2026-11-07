@@ -16,9 +16,9 @@ from moviepy import (
 import arabic_reshaper
 from bidi.algorithm import get_display
 
-st.set_page_config(page_title="Rehan Digital AI Studio", page_icon="🎬")
+st.set_page_config(page_title="Rehan AI Studio", page_icon="🎬")
 
-st.title("🎬 Rehan Digital AI Studio")
+st.title("🎬 Rehan AI Studio")
 st.subheader("Your Personal Video Editing Studio ❤️")
 
 st.header("📹 Upload Your Video")
