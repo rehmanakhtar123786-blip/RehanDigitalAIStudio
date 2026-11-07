@@ -42,6 +42,7 @@ selected_shayari = st.selectbox(
 )
 
 st.header("📹 Video Upload")
+
 videos = st.file_uploader(
     "ویڈیو اپلوڈ کریں (ایک یا زیادہ)",
     type=["mp4", "mov", "avi"],
@@ -49,6 +50,7 @@ videos = st.file_uploader(
 )
 
 st.header("🖼️ Image to Poetry Video")
+
 image_upload = st.file_uploader(
     "تصویر اپلوڈ کریں",
     type=["jpg", "jpeg", "png"]
@@ -81,15 +83,16 @@ position = st.selectbox(
 )
 
 st.header("✨ Text Animation")
+
 animation = st.selectbox(
     "Animation منتخب کریں",
     ["Fade In", "No Animation"]
 )
 
 st.header("🔤 Urdu Font")
+
 st.info(
-    "Noto Nastaliq Urdu کی درست TTF فونٹ فائل اپلوڈ کریں۔ "
-    "فونٹ کے بغیر اردو صحیح نظر نہیں آئے گی۔"
+    "Noto Nastaliq Urdu کی درست TTF/OTF فونٹ فائل اپلوڈ کریں۔"
 )
 
 font_upload = st.file_uploader(
@@ -98,6 +101,7 @@ font_upload = st.file_uploader(
 )
 
 st.header("📱 Video Format")
+
 video_format = st.selectbox(
     "Video Size",
     ["9:16 (Reels / TikTok)", "Original Video"]
@@ -109,16 +113,24 @@ resolution = st.selectbox(
 )
 
 st.header("🎵 Background Music")
+
 music = st.file_uploader(
     "Music اپلوڈ کریں (Optional)",
     type=["mp3", "wav", "m4a"]
 )
 
-volume = st.slider("Music Volume", 0.0, 1.0, 0.3)
+volume = st.slider(
+    "Music Volume",
+    0.0, 1.0, 0.3
+)
 
 
 def make_vertical(clip, target_w, target_h):
-    scale = max(target_w / clip.w, target_h / clip.h)
+
+    scale = max(
+        target_w / clip.w,
+        target_h / clip.h
+    )
 
     resized = clip.resized(
         new_size=(
@@ -143,35 +155,44 @@ if st.button("🎬 Create My Final Video"):
     if not videos and image_upload is None:
         st.warning("براہ کرم ویڈیو یا تصویر اپلوڈ کریں۔")
 
+    elif videos and image_upload is not None:
+        st.warning(
+            "براہ کرم ایک وقت میں صرف ویڈیو یا تصویر منتخب کریں۔"
+        )
+
     elif not poetry.strip():
         st.warning("براہ کرم شاعری لکھیں یا منتخب کریں۔")
 
     elif font_upload is None:
         st.warning(
-            "براہ کرم Noto Nastaliq Urdu کی TTF/OTF فونٹ فائل اپلوڈ کریں۔"
+            "براہ کرم Noto Nastaliq Urdu کی فونٹ فائل اپلوڈ کریں۔"
         )
 
     else:
+
         video_clips = []
         audio_clips = []
         music_parts = []
         temp_files = []
+
         base = None
         final = None
         music_clip = None
         output_path = None
 
         try:
+
             # Save uploaded font
             font_temp = tempfile.NamedTemporaryFile(
                 delete=False,
                 suffix=os.path.splitext(font_upload.name)[1]
             )
+
             font_temp.write(font_upload.getvalue())
             font_temp.close()
+
             temp_files.append(font_temp.name)
 
-            # Load font safely
             font = ImageFont.truetype(
                 font_temp.name,
                 font_size
@@ -179,32 +200,41 @@ if st.button("🎬 Create My Final Video"):
 
             # Create video from uploaded videos
             if videos:
+
                 for video in videos:
+
                     suffix = os.path.splitext(video.name)[1] or ".mp4"
 
                     temp = tempfile.NamedTemporaryFile(
                         delete=False,
                         suffix=suffix
                     )
+
                     temp.write(video.getvalue())
                     temp.close()
+
                     temp_files.append(temp.name)
 
-                    video_clips.append(VideoFileClip(temp.name))
+                    video_clips.append(
+                        VideoFileClip(temp.name)
+                    )
 
                 if len(video_clips) == 1:
                     base = video_clips[0]
+
                 else:
                     base = concatenate_videoclips(
                         video_clips,
                         method="compose"
                     )
 
-            # Create video from uploaded image
+            # Create video from image
             else:
+
                 image = Image.open(image_upload).convert("RGB")
 
                 if video_format == "9:16 (Reels / TikTok)":
+
                     target_w = 720 if resolution == "720p" else 1080
                     target_h = 1280 if resolution == "720p" else 1920
 
@@ -215,13 +245,21 @@ if st.button("🎬 Create My Final Video"):
 
                 base = ImageClip(
                     np.array(image)
-                ).with_duration(image_duration)
+                ).with_duration(
+                    image_duration
+                ).with_fps(24)
 
-            # Resize video to vertical format
+            # Resize uploaded videos
             if videos and video_format == "9:16 (Reels / TikTok)":
+
                 target_w = 720 if resolution == "720p" else 1080
                 target_h = 1280 if resolution == "720p" else 1920
-                base = make_vertical(base, target_w, target_h)
+
+                base = make_vertical(
+                    base,
+                    target_w,
+                    target_h
+                )
 
             width = int(base.w)
             height = int(base.h)
@@ -262,8 +300,10 @@ if st.button("🎬 Create My Final Video"):
 
             if position == "Top":
                 y = 50 - bbox[1]
+
             elif position == "Center":
                 y = (height - text_height) // 2 - bbox[1]
+
             else:
                 y = height - text_height - 70 - bbox[1]
 
@@ -278,12 +318,15 @@ if st.button("🎬 Create My Final Video"):
                 stroke_fill="black"
             )
 
-            # Add poetry to video
+            # Add poetry overlay
             poetry_layer = ImageClip(
                 np.array(overlay)
-            ).with_duration(base.duration)
+            ).with_duration(
+                base.duration
+            ).with_fps(24)
 
             if animation == "Fade In":
+
                 poetry_layer = poetry_layer.with_effects(
                     [vfx.FadeIn(1.5)]
                 )
@@ -291,61 +334,80 @@ if st.button("🎬 Create My Final Video"):
             final = CompositeVideoClip(
                 [base, poetry_layer],
                 size=(width, height)
-            ).with_duration(base.duration)
+            ).with_duration(
+                base.duration
+            )
 
             # Add background music
             if music is not None:
+
                 audio_temp = tempfile.NamedTemporaryFile(
                     delete=False,
                     suffix=".mp3"
                 )
+
                 audio_temp.write(music.getvalue())
                 audio_temp.close()
+
                 temp_files.append(audio_temp.name)
 
                 original_music = AudioFileClip(audio_temp.name)
                 audio_clips.append(original_music)
 
                 if original_music.duration < final.duration:
+
                     count = math.ceil(
                         final.duration / original_music.duration
                     )
 
                     for _ in range(count):
+
                         part = AudioFileClip(audio_temp.name)
                         music_parts.append(part)
 
-                    music_clip = concatenate_audioclips(music_parts)
+                    music_clip = concatenate_audioclips(
+                        music_parts
+                    )
+
                 else:
                     music_clip = original_music
 
                 music_clip = music_clip.subclipped(
-                    0, final.duration
+                    0,
+                    final.duration
                 ).with_volume_scaled(volume)
 
                 final = final.with_audio(music_clip)
 
-            # Export final video
+            # Export video
             output_temp = tempfile.NamedTemporaryFile(
                 delete=False,
                 suffix=".mp4"
             )
+
             output_path = output_temp.name
             output_temp.close()
 
             st.info("آپ کی ویڈیو بن رہی ہے، انتظار کریں...")
 
+            # FIXED FPS
+            export_fps = getattr(base, "fps", None) or 24
+
             final.write_videofile(
                 output_path,
                 codec="libx264",
                 audio_codec="aac",
-                fps=base.fps or 24
+                fps=export_fps
             )
 
-            st.success("آپ کی شاعری والی ویڈیو تیار ہے! ❤️")
+            st.success(
+                "آپ کی شاعری والی ویڈیو تیار ہے! ❤️"
+            )
+
             st.video(output_path)
 
             with open(output_path, "rb") as file:
+
                 st.download_button(
                     "⬇️ Download Final Video",
                     file,
@@ -354,13 +416,16 @@ if st.button("🎬 Create My Final Video"):
                 )
 
         except Exception as e:
+
             st.error(f"Error: {e}")
+
             st.info(
-                "اگر اردو خانے نظر آئیں تو کوئی دوسری درست "
-                "Noto Nastaliq Urdu TTF فائل آزمائیں۔"
+                "اگر اردو کے خانے نظر آئیں تو کوئی دوسری "
+                "درست Noto Nastaliq Urdu TTF فائل آزمائیں۔"
             )
 
         finally:
+
             if final is not None:
                 try:
                     final.close()
