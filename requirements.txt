@@ -1,5 +1,8 @@
+
 streamlit
 moviepy
 pillow
+numpy
 arabic-reshaper
 python-bidi
+gTTS
